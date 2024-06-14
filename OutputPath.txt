@@ -1,0 +1,7 @@
+  - name: Archive artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: android-artifacts
+          path: |
+            android/app/build/outputs/
+            android/app/build/outputs/bundle/release/
