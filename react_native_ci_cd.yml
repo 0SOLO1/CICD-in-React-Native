@@ -1,0 +1,54 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - Production
+      - Deployment
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Set execute permission for gradlew script
+        run: chmod +x android/gradlew
+
+      - name: Build and Install Release APK
+        run: |
+          cd android
+          ./gradlew assembleRelease
+          # Check if there are connected devices or emulators before installing
+          if [ $(adb devices | wc -l) -lt 3 ]; then
+            echo "No connected devices or emulators found, skipping installation."
+          else
+            ./gradlew installRelease
+          fi
+
+      - name: Generate AAB
+        run: cd android && ./gradlew bundleRelease
+
+      - name: Archive artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: android-artifacts
+          path: |
+            android/app/build/outputs/
+            android/app/build/outputs/bundle/release/
+
+      - name: Deploy to Google Play Store (AAB)
+        if: github.ref == 'refs/heads/Deployment'
+        # Replace this with your deployment script
+        run: ./scripts/deploy-to-playstore.sh
