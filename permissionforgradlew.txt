@@ -1,0 +1,2 @@
+  - name: Set execute permission for gradlew script
+    run: chmod +x android/gradlew
